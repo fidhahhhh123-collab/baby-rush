@@ -50,16 +50,15 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    // Load images
+    // ✅ Correct image URLs
     const babyImg = new Image();
-    babyImg.src = "https://i.imgur.com/OH6eQ0a.png"; // Sample baby image
+    babyImg.src = "https://i.imgur.com/OH6eQ0a.png";
 
     const pacifierImg = new Image();
-    pacifierImg.src = "https://i.imgur.com/0rZS8Cp.png"; // Sample pacifier image
+    pacifierImg.src = "https://i.imgur.com/0rZS8Cp.png";
 
     const bottleImg = new Image();
-    bottleImg.src = "https://pngtree.com/freepng/milk-bottle_18807681.html"; 
-    // Transparent milk bottle (fetched) 
+    bottleImg.src = "https://i.imgur.com/8dH6XqN.png";
 
     let score = 0;
     let gameOver = false;
@@ -82,13 +81,8 @@
       });
     }
 
-    function drawImageOrBox(img, x, y, w, h, color) {
-      if (img.complete && img.naturalWidth > 0) {
-        ctx.drawImage(img, x, y, w, h);
-      } else {
-        ctx.fillStyle = color;
-        ctx.fillRect(x, y, w, h);
-      }
+    function drawImage(img, x, y, w, h) {
+      ctx.drawImage(img, x, y, w, h);
     }
 
     document.addEventListener("keydown", (e) => {
@@ -117,13 +111,12 @@
         baby.onGround = true;
       }
 
-      drawImageOrBox(babyImg, baby.x, baby.y, baby.width, baby.height, "pink");
+      drawImage(babyImg, baby.x, baby.y, baby.width, baby.height);
 
       objects.forEach((obj, i) => {
         obj.x -= obj.speed;
         const img = obj.type === "pacifier" ? pacifierImg : bottleImg;
-        const color = obj.type === "pacifier" ? "yellow" : "red";
-        drawImageOrBox(img, obj.x, obj.y, obj.width, obj.height, color);
+        drawImage(img, obj.x, obj.y, obj.width, obj.height);
 
         if (
           baby.x < obj.x + obj.width && baby.x + baby.width > obj.x &&
@@ -131,38 +124,4 @@
         ) {
           if (obj.type === "pacifier") {
             score += 10;
-            objects.splice(i, 1);
-          } else {
-            endGame();
-          }
-        }
-
-        if (obj.x + obj.width < 0) objects.splice(i, 1);
-      });
-
-      document.getElementById("score").innerText = "Score: " + score;
-      requestAnimationFrame(update);
-    }
-
-    function endGame() {
-      gameOver = true;
-      document.getElementById("gameOver").style.display = "block";
-      document.getElementById("restartBtn").style.display = "inline-block";
-    }
-
-    document.getElementById("restartBtn").addEventListener("click", () => {
-      score = 0;
-      objects = [];
-      baby.y = 300;
-      baby.dy = 0;
-      gameOver = false;
-      document.getElementById("gameOver").style.display = "none";
-      document.getElementById("restartBtn").style.display = "none";
-      update();
-    });
-
-    setInterval(spawnObject, 1500);
-    update();
-  </script>
-</body>
-</html>
+            objects.sp
