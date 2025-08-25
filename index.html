@@ -1,75 +1,109 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Baby Bottle Game</title>
+  <title>Baby Run Game</title>
   <style>
     body {
       text-align: center;
       font-family: Arial, sans-serif;
-      background: linear-gradient(to bottom, #fdf7d7, #d9f7f7);
+      background: linear-gradient(to bottom, #aee1f9, #fdf6d7);
+      margin: 0;
+      padding: 0;
     }
-    h1 { color: #333; }
-    #gameCanvas {
-      border: 2px solid #444;
+    h1 { margin: 10px; }
+    #score {
+      font-size: 20px;
+      margin: 10px;
+      color: #222;
+    }
+    canvas {
+      border: 3px solid #333;
       display: block;
-      margin: 20px auto;
+      margin: 0 auto;
       background: #fff;
       border-radius: 10px;
+    }
+    #gameOver {
+      display: none;
+      font-size: 28px;
+      color: red;
+      font-weight: bold;
+    }
+    button {
+      display: none;
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      background: #4CAF50;
+      color: #fff;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <h1>Baby Bottle Game</h1>
+  <h1>Baby Run 👶</h1>
   <h2 id="score">Score: 0</h2>
+  <h2 id="gameOver">Game Over! ❌</h2>
+  <button id="restartBtn">Restart</button>
   <canvas id="gameCanvas" width="800" height="400"></canvas>
 
   <script>
-    // 🔹 Load images
-    const babyImg = new Image();
-    const bottleImg = new Image();
-    const birdImg = new Image();
-    const dogImg = new Image();
-
-    // 👉 Replace these with your uploaded CodePen Asset URLs
-    babyImg.src   = "baby.png";
-    bottleImg.src = "bottle.png";
-    birdImg.src   = "bird.png";
-    dogImg.src    = "dog.png";
-
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
+    // Load images (replace with your asset URLs)
+    const babyImg = new Image();
+    const pacifierImg = new Image();
+    const bottleImg = new Image();
+    babyImg.src = "baby.png";       
+    pacifierImg.src = "pacifier.png"; 
+    bottleImg.src = "bottle.png";     
+
     let score = 0;
-    let baby = { x: 50, y: 150, width: 60, height: 60, speed: 20 };
+    let gameOver = false;
+
+    // Baby character
+    let baby = {
+      x: 50,
+      y: 300,
+      width: 60,
+      height: 60,
+      dy: 0,
+      gravity: 0.6,
+      jumpPower: -12,
+      onGround: true
+    };
+
+    // Pacifiers & Bottles
     let objects = [];
 
-    // Controls
-    document.addEventListener("keydown", (e) => {
-      if (e.code === "ArrowUp") baby.y -= baby.speed;
-      if (e.code === "ArrowDown") baby.y += baby.speed;
-      if (baby.y < 0) baby.y = 0;
-      if (baby.y + baby.height > canvas.height) baby.y = canvas.height - baby.height;
-    });
-
-    // Spawn objects
     function spawnObject() {
-      const types = ["bottle", "bird", "dog"];
-      const choice = types[Math.floor(Math.random() * types.length)];
-      let img = choice === "bottle" ? bottleImg : choice === "bird" ? birdImg : dogImg;
-      objects.push({
-        x: canvas.width,
-        y: Math.random() * (canvas.height - 40),
-        width: 40,
-        height: 40,
-        speed: 3 + Math.random() * 2,
-        type: choice,
-        img: img
-      });
+      if (gameOver) return;
+      const isPacifier = Math.random() < 0.6; 
+      if (isPacifier) {
+        objects.push({
+          type: "pacifier",
+          x: canvas.width,
+          y: Math.random() * 200 + 100,
+          width: 40,
+          height: 40,
+          speed: 5
+        });
+      } else {
+        objects.push({
+          type: "bottle",
+          x: canvas.width,
+          y: 340, 
+          width: 40,
+          height: 40,
+          speed: 5
+        });
+      }
     }
 
-    // Draw with fallback
     function drawImageOrBox(img, x, y, w, h, color) {
       if (img.complete && img.naturalWidth > 0) {
         ctx.drawImage(img, x, y, w, h);
@@ -79,27 +113,61 @@
       }
     }
 
+    // Controls (PC)
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space" && baby.onGround && !gameOver) {
+        baby.dy = baby.jumpPower;
+        baby.onGround = false;
+      }
+    });
+
+    // Controls (Mobile)
+    canvas.addEventListener("touchstart", () => {
+      if (baby.onGround && !gameOver) {
+        baby.dy = baby.jumpPower;
+        baby.onGround = false;
+      }
+    });
+
     // Game loop
     function update() {
+      if (gameOver) return;
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Baby
+      // Baby physics
+      baby.y += baby.dy;
+      baby.dy += baby.gravity;
+      if (baby.y + baby.height >= 360) {
+        baby.y = 360 - baby.height;
+        baby.dy = 0;
+        baby.onGround = true;
+      }
+
+      // Draw baby
       drawImageOrBox(babyImg, baby.x, baby.y, baby.width, baby.height, "pink");
 
-      // Objects
+      // Update objects
       objects.forEach((obj, i) => {
         obj.x -= obj.speed;
-        const color = obj.type === "bottle" ? "yellow" : obj.type === "bird" ? "blue" : "brown";
-        drawImageOrBox(obj.img, obj.x, obj.y, obj.width, obj.height, color);
+
+        if (obj.type === "pacifier") {
+          drawImageOrBox(pacifierImg, obj.x, obj.y, obj.width, obj.height, "yellow");
+        } else {
+          drawImageOrBox(bottleImg, obj.x, obj.y, obj.width, obj.height, "red");
+        }
 
         // Collision
         if (baby.x < obj.x + obj.width &&
             baby.x + baby.width > obj.x &&
             baby.y < obj.y + obj.height &&
             baby.y + baby.height > obj.y) {
-          if (obj.type === "bottle") score += 10;
-          else score -= 5;
-          objects.splice(i, 1);
+          if (obj.type === "pacifier") {
+            score += 10;
+            objects.splice(i, 1);
+          } else if (obj.type === "bottle") {
+            endGame();
+          }
         }
 
         if (obj.x + obj.width < 0) objects.splice(i, 1);
@@ -109,10 +177,28 @@
       requestAnimationFrame(update);
     }
 
-    // Start
+    function endGame() {
+      gameOver = true;
+      document.getElementById("gameOver").style.display = "block";
+      document.getElementById("restartBtn").style.display = "inline-block";
+    }
+
+    // Restart
+    document.getElementById("restartBtn").addEventListener("click", () => {
+      score = 0;
+      objects = [];
+      baby.y = 300;
+      baby.dy = 0;
+      gameOver = false;
+      document.getElementById("gameOver").style.display = "none";
+      document.getElementById("restartBtn").style.display = "none";
+      update();
+    });
+
     setInterval(spawnObject, 1500);
     update();
   </script>
 </body>
 </html>
 
+    
