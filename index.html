@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baby Bottle Game</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #fdf7d7, #d9f7f7);
+    }
+
+    h1 {
+      font-size: 28px;
+      color: #333;
+    }
+
+    h2 {
+      margin-top: -10px;
+      color: #222;
+    }
+
+    #gameCanvas {
+      border: 2px solid #444;
+      display: block;
+      margin: 20px auto;
+      background: #fff;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Baby Bottle Game</h1>
+  <h2 id="score">Score: 0</h2>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+  <script>
+    // Load images
+    let babyImg = new Image();
+    babyImg.src = "YOUR-LINK-HERE/baby.png";
+
+    let bottleImg = new Image();
+    bottleImg.src = "YOUR-LINK-HERE/bottle.png";
+
+    let birdImg = new Image();
+    birdImg.src = "YOUR-LINK-HERE/bird.png";
+
+    let dogImg = new Image();
+    dogImg.src = "YOUR-LINK-HERE/dog.png";
+
+    // Track loaded images
+    let imagesLoaded = 0;
+    const totalImages = 4;
+
+    [babyImg, bottleImg, birdImg, dogImg].forEach(img => {
+      img.onload = () => {
+        imagesLoaded++;
+        if (imagesLoaded === totalImages) {
+          startGame(); // start only when all images are ready
+        }
+      };
+    });
+
+    // Setup canvas
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Game variables
+    let score = 0;
+    let baby = { x: 50, y: 150, width: 60, height: 60, speed: 20 };
+    let objects = [];
+
+    // Move baby with arrow keys
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "ArrowUp") baby.y -= baby.speed;
+      if (e.code === "ArrowDown") baby.y += baby.speed;
+
+      // Keep inside canvas
+      if (baby.y < 0) baby.y = 0;
+      if (baby.y + baby.height > canvas.height) baby.y = canvas.height - baby.height;
+    });
+
+    // Spawn falling objects
+    function spawnObject() {
+      let types = ["bottle", "bird", "dog"];
+      let choice = types[Math.floor(Math.random() * types.length)];
+      let img = choice === "bottle" ? bottleImg : choice === "bird" ? birdImg : dogImg;
+
+      objects.push({
+        x: canvas.width,
+        y: Math.random() * (canvas.height - 40),
+        width: 40,
+        height: 40,
+        speed: 3 + Math.random() * 2,
+        type: choice,
+        img: img
+      });
+    }
+
+    // Game loop
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Draw baby
+      ctx.drawImage(babyImg, baby.x, baby.y, baby.width, baby.height);
+
+      // Draw & move objects
+      objects.forEach((obj, index) => {
+        obj.x -= obj.speed;
+        ctx.drawImage(obj.img, obj.x, obj.y, obj.width, obj.height);
+
+        // Collision detection
+        if (
+          baby.x < obj.x + obj.width &&
+          baby.x + baby.width > obj.x &&
+          baby.y < obj.y + obj.height &&
+          baby.y + baby.height > obj.y
+        ) {
+          if (obj.type === "bottle") {
+            score += 10; // collect bottle
+          } else {
+            score -= 5; // hit by bird/dog
+          }
+          objects.splice(index, 1); // remove object
+        }
+
+        // Remove off-screen objects
+        if (obj.x + obj.width < 0) {
+          objects.splice(index, 1);
+        }
+      });
+
+      // Update score display
+      document.getElementById("score").innerText = "Score: " + score;
+
+      requestAnimationFrame(update);
+    }
+
+    // Start game
+    function startGame() {
+      setInterval(spawnObject, 1500); // new object every 1.5 sec
+      update();
+    }
+  </script>
+</body>
+</html>
