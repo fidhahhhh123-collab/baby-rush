@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -24,13 +25,8 @@
       background: #fff;
       border-radius: 10px;
     }
-    #gameOver {
-      display: none;
-      font-size: 28px;
-      color: red;
-      font-weight: bold;
-    }
-    button {
+    #gameOver { display: none; color: red; font-size: 28px; }
+    #restartBtn {
       display: none;
       margin-top: 15px;
       padding: 10px 20px;
@@ -54,54 +50,36 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    // Load images (replace with your asset URLs)
+    // Load images
     const babyImg = new Image();
+    babyImg.src = "https://i.imgur.com/OH6eQ0a.png"; // Sample baby image
+
     const pacifierImg = new Image();
+    pacifierImg.src = "https://i.imgur.com/0rZS8Cp.png"; // Sample pacifier image
+
     const bottleImg = new Image();
-    babyImg.src = "baby.png";       
-    pacifierImg.src = "pacifier.png"; 
-    bottleImg.src = "bottle.png";     
+    bottleImg.src = "https://pngtree.com/freepng/milk-bottle_18807681.html"; 
+    // Transparent milk bottle (fetched) 
 
     let score = 0;
     let gameOver = false;
 
-    // Baby character
     let baby = {
-      x: 50,
-      y: 300,
-      width: 60,
-      height: 60,
-      dy: 0,
-      gravity: 0.6,
-      jumpPower: -12,
-      onGround: true
+      x: 50, y: 300, width: 60, height: 60,
+      dy: 0, gravity: 0.6, jumpPower: -12, onGround: true
     };
 
-    // Pacifiers & Bottles
     let objects = [];
 
     function spawnObject() {
       if (gameOver) return;
-      const isPacifier = Math.random() < 0.6; 
-      if (isPacifier) {
-        objects.push({
-          type: "pacifier",
-          x: canvas.width,
-          y: Math.random() * 200 + 100,
-          width: 40,
-          height: 40,
-          speed: 5
-        });
-      } else {
-        objects.push({
-          type: "bottle",
-          x: canvas.width,
-          y: 340, 
-          width: 40,
-          height: 40,
-          speed: 5
-        });
-      }
+      const isPacifier = Math.random() < 0.6;
+      objects.push({
+        type: isPacifier ? "pacifier" : "bottle",
+        x: canvas.width,
+        y: isPacifier ? Math.random() * 200 + 100 : 340,
+        width: 40, height: 40, speed: 5
+      });
     }
 
     function drawImageOrBox(img, x, y, w, h, color) {
@@ -113,7 +91,6 @@
       }
     }
 
-    // Controls (PC)
     document.addEventListener("keydown", (e) => {
       if (e.code === "Space" && baby.onGround && !gameOver) {
         baby.dy = baby.jumpPower;
@@ -121,7 +98,6 @@
       }
     });
 
-    // Controls (Mobile)
     canvas.addEventListener("touchstart", () => {
       if (baby.onGround && !gameOver) {
         baby.dy = baby.jumpPower;
@@ -129,13 +105,10 @@
       }
     });
 
-    // Game loop
     function update() {
       if (gameOver) return;
-
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Baby physics
       baby.y += baby.dy;
       baby.dy += baby.gravity;
       if (baby.y + baby.height >= 360) {
@@ -144,28 +117,22 @@
         baby.onGround = true;
       }
 
-      // Draw baby
       drawImageOrBox(babyImg, baby.x, baby.y, baby.width, baby.height, "pink");
 
-      // Update objects
       objects.forEach((obj, i) => {
         obj.x -= obj.speed;
+        const img = obj.type === "pacifier" ? pacifierImg : bottleImg;
+        const color = obj.type === "pacifier" ? "yellow" : "red";
+        drawImageOrBox(img, obj.x, obj.y, obj.width, obj.height, color);
 
-        if (obj.type === "pacifier") {
-          drawImageOrBox(pacifierImg, obj.x, obj.y, obj.width, obj.height, "yellow");
-        } else {
-          drawImageOrBox(bottleImg, obj.x, obj.y, obj.width, obj.height, "red");
-        }
-
-        // Collision
-        if (baby.x < obj.x + obj.width &&
-            baby.x + baby.width > obj.x &&
-            baby.y < obj.y + obj.height &&
-            baby.y + baby.height > obj.y) {
+        if (
+          baby.x < obj.x + obj.width && baby.x + baby.width > obj.x &&
+          baby.y < obj.y + obj.height && baby.y + baby.height > obj.y
+        ) {
           if (obj.type === "pacifier") {
             score += 10;
             objects.splice(i, 1);
-          } else if (obj.type === "bottle") {
+          } else {
             endGame();
           }
         }
@@ -183,7 +150,6 @@
       document.getElementById("restartBtn").style.display = "inline-block";
     }
 
-    // Restart
     document.getElementById("restartBtn").addEventListener("click", () => {
       score = 0;
       objects = [];
@@ -200,5 +166,3 @@
   </script>
 </body>
 </html>
-
-    
