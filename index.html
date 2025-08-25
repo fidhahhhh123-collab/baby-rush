@@ -2,126 +2,78 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Baby Run Game</title>
   <style>
     body {
-      text-align: center;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(to bottom, #aee1f9, #fdf6d7);
       margin: 0;
-      padding: 0;
-    }
-    h1 { margin: 10px; }
-    #score {
-      font-size: 20px;
-      margin: 10px;
-      color: #222;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #cce7ff;
     }
     canvas {
       border: 3px solid #333;
-      display: block;
-      margin: 0 auto;
       background: #fff;
-      border-radius: 10px;
-    }
-    #gameOver { display: none; color: red; font-size: 28px; }
-    #restartBtn {
-      display: none;
-      margin-top: 15px;
-      padding: 10px 20px;
-      font-size: 18px;
-      border: none;
-      border-radius: 8px;
-      background: #4CAF50;
-      color: #fff;
-      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <h1>Baby Run 👶</h1>
-  <h2 id="score">Score: 0</h2>
-  <h2 id="gameOver">Game Over! ❌</h2>
-  <button id="restartBtn">Restart</button>
-  <canvas id="gameCanvas" width="800" height="400"></canvas>
+<canvas id="gameCanvas" width="800" height="400"></canvas>
 
-  <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 
-    // ✅ Correct image URLs
-    const babyImg = new Image();
-    babyImg.src = "https://i.imgur.com/OH6eQ0a.png";
+// Load images
+const babyImg = new Image();
+babyImg.src = "https://i.ibb.co/ThcQ2Xm/baby.png";   // 👶 replace with your baby image
+const pacifierImg = new Image();
+pacifierImg.src = "https://i.ibb.co/3YmDdWd/pacifier.png";  // 🍼 replace with pacifier
+const bottleImg = new Image();
+bottleImg.src = "https://i.ibb.co/gm9t4RQ/bottle.png";  // 🚫 game over bottle
 
-    const pacifierImg = new Image();
-    pacifierImg.src = "https://i.imgur.com/0rZS8Cp.png";
+// Game objects
+let baby = { x: 50, y: 300, w: 60, h: 60, vy: 0, jumping: false };
+let pacifiers = [];
+let bottles = [];
+let score = 0;
+let gameOver = false;
 
-    const bottleImg = new Image();
-    bottleImg.src = "https://i.imgur.com/8dH6XqN.png";
+// Spawn pacifiers and bottles
+setInterval(() => {
+  if (!gameOver) {
+    pacifiers.push({ x: 800, y: Math.random() * 250 + 100, w: 40, h: 40 });
+    bottles.push({ x: 800, y: 340, w: 40, h: 40 });
+  }
+}, 2000);
 
-    let score = 0;
-    let gameOver = false;
+// Controls
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" && !baby.jumping) {
+    baby.vy = -12;
+    baby.jumping = true;
+  }
+});
 
-    let baby = {
-      x: 50, y: 300, width: 60, height: 60,
-      dy: 0, gravity: 0.6, jumpPower: -12, onGround: true
-    };
+// Game loop
+function update() {
+  if (gameOver) return;
 
-    let objects = [];
+  // gravity
+  baby.vy += 0.6;
+  baby.y += baby.vy;
+  if (baby.y > 300) {
+    baby.y = 300;
+    baby.jumping = false;
+  }
 
-    function spawnObject() {
-      if (gameOver) return;
-      const isPacifier = Math.random() < 0.6;
-      objects.push({
-        type: isPacifier ? "pacifier" : "bottle",
-        x: canvas.width,
-        y: isPacifier ? Math.random() * 200 + 100 : 340,
-        width: 40, height: 40, speed: 5
-      });
-    }
+  // Move pacifiers and bottles
+  pacifiers.forEach(p => p.x -= 5);
+  bottles.forEach(b => b.x -= 5);
 
-    function drawImage(img, x, y, w, h) {
-      ctx.drawImage(img, x, y, w, h);
-    }
-
-    document.addEventListener("keydown", (e) => {
-      if (e.code === "Space" && baby.onGround && !gameOver) {
-        baby.dy = baby.jumpPower;
-        baby.onGround = false;
-      }
-    });
-
-    canvas.addEventListener("touchstart", () => {
-      if (baby.onGround && !gameOver) {
-        baby.dy = baby.jumpPower;
-        baby.onGround = false;
-      }
-    });
-
-    function update() {
-      if (gameOver) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      baby.y += baby.dy;
-      baby.dy += baby.gravity;
-      if (baby.y + baby.height >= 360) {
-        baby.y = 360 - baby.height;
-        baby.dy = 0;
-        baby.onGround = true;
-      }
-
-      drawImage(babyImg, baby.x, baby.y, baby.width, baby.height);
-
-      objects.forEach((obj, i) => {
-        obj.x -= obj.speed;
-        const img = obj.type === "pacifier" ? pacifierImg : bottleImg;
-        drawImage(img, obj.x, obj.y, obj.width, obj.height);
-
-        if (
-          baby.x < obj.x + obj.width && baby.x + baby.width > obj.x &&
-          baby.y < obj.y + obj.height && baby.y + baby.height > obj.y
-        ) {
-          if (obj.type === "pacifier") {
-            score += 10;
-            objects.sp
+  // Collision check pacifiers
+  pacifiers = pacifiers.filter(p => {
+    if (checkCollision(baby, p)) {
+      score++;
+      retur
