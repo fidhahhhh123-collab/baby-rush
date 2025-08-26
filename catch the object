@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Catch the Object Game</title>
+  <style>
+    canvas { 
+      background: lightblue; 
+      display: block; 
+      margin: 20px auto; 
+      border: 3px solid black; 
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="400" height="500"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Player
+    const player = {
+      x: canvas.width / 2 - 25,
+      y: canvas.height - 40,
+      width: 50,
+      height: 20,
+      speed: 5,
+      dx: 0
+    };
+
+    // Falling object
+    const object = {
+      x: Math.random() * (canvas.width - 20),
+      y: 0,
+      size: 20,
+      speed: 3
+    };
+
+    let score = 0;
+
+    // Draw player
+    function drawPlayer() {
+      ctx.fillStyle = "red";
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
+
+    // Draw object
+    function drawObject() {
+      ctx.fillStyle = "green";
+      ctx.beginPath();
+      ctx.arc(object.x, object.y, object.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Draw score
+    function drawScore() {
+      ctx.fillStyle = "black";
+      ctx.font = "20px Arial";
+      ctx.fillText("Score: " + score, 10, 25);
+    }
+
+    // Move player
+    function movePlayer() {
+      player.x += player.dx;
+
+      // Keep inside canvas
+      if (player.x < 0) player.x = 0;
+      if (player.x + player.width > canvas.width) {
+        player.x = canvas.width - player.width;
+      }
+    }
+
+    // Move object
+    function moveObject() {
+      object.y += object.speed;
+
+      // If object reaches bottom -> reset position
+      if (object.y > canvas.height) {
+        object.y = 0;
+        object.x = Math.random() * (canvas.width - object.size);
+      }
+
+      // Collision detection
+      if (
+        object.y + object.size > player.y &&
+        object.x > player.x &&
+        object.x < player.x + player.width
+      ) {
+        score++;
+        object.y = 0;
+        object.x = Math.random() * (canvas.width - object.size);
+      }
+    }
+
+    // Clear canvas
+    function clear() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Update game
+    function update() {
+      clear();
+
+      drawPlayer();
+      drawObject();
+      drawScore();
+
+      movePlayer();
+      moveObject();
+
+      requestAnimationFrame(update);
+    }
+
+    // Key events
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") {
+        player.dx = player.speed;
+      } else if (e.key === "ArrowLeft") {
+        player.dx = -player.speed;
+      }
+    });
+
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        player.dx = 0;
+      }
+    });
+
+    update();
+  </script>
+</body>
+</html>
